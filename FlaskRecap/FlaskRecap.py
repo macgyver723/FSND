@@ -31,3 +31,7 @@ def greeting_add():
         abort(422)
     greetings[info['lang']] = info['greeting']
     return jsonify({'greetings':greetings})
+
+# url to login to auth0
+# https://fsnd-stefan.auth0.com/authorize?audience=image&response_type=code&client_id=QEpJRy31MOBtlbbsqsEUOV5GWnFjk9y9&redirect_uri=http://localhost:8080/login-results
+# token: 
