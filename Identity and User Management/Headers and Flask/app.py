@@ -15,10 +15,8 @@ def get_token_auth_header():
         abort(401)
     
     auth_token = header_parts[1]
-    # print(f'auth_header: {auth_header}')
-    # print(f'auth_token: {auth_token}')
 
-    return header_parts[1]
+    return auth_token
 
 def requires_auth(f):
     @wraps(f)
