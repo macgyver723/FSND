@@ -1,16 +1,16 @@
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify, redirect
 import json
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
-
 app = Flask(__name__)
 
-AUTH0_DOMAIN = @TODO_REPLACE_WITH_YOUR_DOMAIN
+AUTH0_DOMAIN = 'fsnd-stefan.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = @TODO_REPLACE_WITH_YOUR_API_AUDIENCE
-
+API_AUDIENCE = 'image'
+CLIENT_ID = 'QEpJRy31MOBtlbbsqsEUOV5GWnFjk9y9'
+CALLBACK_URL = 'http://localhost:5000/headers'
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
@@ -104,21 +104,85 @@ def verify_decode_jwt(token):
                 'description': 'Unable to find the appropriate key.'
             }, 400)
 
+def check_permissions(permission, payload):
+    if 'permissions' not in payload:
+        raise AuthError({
+            'code': 'invalid_claims',
+            'description': 'Permissions not incluced in JWT'
+        }, 400)
+    if permission not in payload['permissions']:
+        raise AuthError({
+            'code': 'unauthorized',
+            'description': 'Permission not found'
+        }, 403)
+    return True
 
-def requires_auth(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        token = get_token_auth_header()
-        try:
-            payload = verify_decode_jwt(token)
-        except:
-            abort(401)
-        return f(payload, *args, **kwargs)
+def requires_auth(permission=''):
+    def requires_auth_decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            token = get_token_auth_header()
+            try:
+                payload = verify_decode_jwt(token)
+            except:
+                abort(401)
+            
+            check_permissions(permission, payload)
 
-    return wrapper
+            return f(payload, *args, **kwargs)
 
-@app.route('/headers')
-@requires_auth
-def headers(payload):
+        return wrapper
+    return requires_auth_decorator
+
+# url to login to auth0
+# https://fsnd-stefan.auth0.com/authorize?audience=image&response_type=token&client_id=QEpJRy31MOBtlbbsqsEUOV5GWnFjk9y9&redirect_uri=http://localhost:8080/login-results
+# token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkhiZXQ0WlRvaTE2bzUyRXd4ZENoRSJ9.eyJpc3MiOiJodHRwczovL2ZzbmQtc3RlZmFuLmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw1ZThmYzVlY2E1NTRkZjBjMDQ5N2IxZTUiLCJhdWQiOiJpbWFnZSIsImlhdCI6MTU4Njc5OTU4NSwiZXhwIjoxNTg2ODA2Nzg1LCJhenAiOiJRRXBKUnkzMU1PQnRsYmJzcXNFVU9WNUdXbkZqazl5OSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZ2V0OmltYWdlcyIsInBvc3Q6aW1hZ2VzIl19.NaplzXhrqapsucwsWTpXVub_D4Nf41NUXOwavq5sVuvd86IW2iELNL3zLfrmA3YfhgzkMY1lJn7SffoQMMSL5NI9lzk5lkbY4_o4NTzsOFySm2WgaEUBd8i8ywhi2qrBjo8OLuEiNqHX1SGCaB5JT9yG1BWG8hvw1ZPirKHQJMz4TEGb4E-sC0zpcVPkk2v6R2QI-oLXyqre1mN4lKNEL5C-jkvfvdNSOGuiQMhneTlzDejhnhguMqONS6Y34WJH5L_WAJuZhN8ZE0235GuLjgK8wzGyXBUJ0bDl6wBYYhV1XzkJiKEGFcFLri_Gj-rxVuPhyA_Jzs3p2mrjnTk95A
+
+@app.route('/')
+def index():
+    # login page, see button
+
+    # redirect to Auth0
+
+    # use the callback function as "access granted" screen
+    
+    # get jwt token from header
+
+    # redirect to headers() and set headers
+    html = '''
+            <form action="/login">
+                <input type="submit" value="Login"/>
+            </form>
+            '''
+    # return html
+    authorize_url = f'https://{AUTH0_DOMAIN}/authorize?'
+    authorize_url = f'audience={API_AUDIENCE}&'
+    authorize_url += 'response_type=token&'
+    authorize_url += f'client_id={CLIENT_ID}&'
+    authorize_url += f'redirect_uri={CALLBACK_URL}'
+
+    return redirect(authorize_url)
+
+@app.route('/login')
+def login():
+    return redirect("https://fsnd-stefan.auth0.com/authorize?audience=image&response_type=token&client_id=QEpJRy31MOBtlbbsqsEUOV5GWnFjk9y9&redirect_uri=http://localhost:5000/headers")
+
+@app.route('/login-results')
+def logged_in():
+    access_token = request.args.get('access_token', None)
+    print(f"Access token is: {access_token}")
+    return f"access token is {access_token}"
+
+@app.route('/images')
+@requires_auth('get:images')
+def images(payload):
     print(payload)
-    return 'Access Granted'
+    return 'not implemented'
+
+@app.errorhandler(401)
+def not_authorized(error):
+    return jsonify({
+        'success' : False,
+        'error' : 401,
+        'message' : 'not authorized'
+    }), 401
