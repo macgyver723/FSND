@@ -4,6 +4,10 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
+
 app = Flask(__name__)
 
 AUTH0_DOMAIN = 'fsnd-stefan.auth0.com'
@@ -176,7 +180,7 @@ def logged_in():
 @app.route('/images')
 @requires_auth('get:images')
 def images(payload):
-    print(payload)
+    pp.pprint(payload)
     return 'not implemented'
 
 @app.errorhandler(401)
