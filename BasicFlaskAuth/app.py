@@ -187,14 +187,6 @@ def images(payload):
     pp.pprint(payload)
     return 'not implemented'
 
-# @app.errorhandler(401)
-# def not_authorized(error):
-#     return jsonify({
-#         'success' : False,
-#         'error' : 401,
-#         'message' : 'not authorized'
-#     }), 401
-
 @app.errorhandler(AuthError)
 def auth_error(error):
     return jsonify({
