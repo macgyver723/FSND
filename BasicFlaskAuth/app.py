@@ -14,7 +14,7 @@ AUTH0_DOMAIN = 'fsnd-stefan.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'image'
 CLIENT_ID = 'QEpJRy31MOBtlbbsqsEUOV5GWnFjk9y9'
-CALLBACK_URL = 'http://localhost:5000/headers'
+CALLBACK_URL = 'http://localhost:8080/login-results'
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
@@ -129,7 +129,11 @@ def requires_auth(permission=''):
             try:
                 payload = verify_decode_jwt(token)
             except:
-                abort(401)
+                raise AuthError({
+                'code': 'unauthorized',
+                'description': 'Could not process token'
+            }, 401)
+                # abort(401)
             
             check_permissions(permission, payload)
 
@@ -160,7 +164,7 @@ def index():
             '''
     # return html
     authorize_url = f'https://{AUTH0_DOMAIN}/authorize?'
-    authorize_url = f'audience={API_AUDIENCE}&'
+    authorize_url += f'audience={API_AUDIENCE}&'
     authorize_url += 'response_type=token&'
     authorize_url += f'client_id={CLIENT_ID}&'
     authorize_url += f'redirect_uri={CALLBACK_URL}'
@@ -183,10 +187,19 @@ def images(payload):
     pp.pprint(payload)
     return 'not implemented'
 
-@app.errorhandler(401)
-def not_authorized(error):
+# @app.errorhandler(401)
+# def not_authorized(error):
+#     return jsonify({
+#         'success' : False,
+#         'error' : 401,
+#         'message' : 'not authorized'
+#     }), 401
+
+@app.errorhandler(AuthError)
+def auth_error(error):
     return jsonify({
         'success' : False,
-        'error' : 401,
-        'message' : 'not authorized'
-    }), 401
+        'error' : error.error,
+        'status_code' : error.status_code
+        
+    }), error.status_code
