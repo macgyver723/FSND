@@ -14,7 +14,7 @@ AUTH0_DOMAIN = 'fsnd-stefan.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'image'
 CLIENT_ID = 'QEpJRy31MOBtlbbsqsEUOV5GWnFjk9y9'
-CALLBACK_URL = 'http://localhost:8080/login-results'
+CALLBACK_URL = 'http://localhost:5000/login-results'
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
@@ -128,6 +128,8 @@ def requires_auth(permission=''):
             token = get_token_auth_header()
             try:
                 payload = verify_decode_jwt(token)
+                print("\tgot payload in requires_auth")
+                pp.pprint(payload)
             except:
                 raise AuthError({
                 'code': 'unauthorized',
@@ -175,11 +177,11 @@ def index():
 def login():
     return redirect("https://fsnd-stefan.auth0.com/authorize?audience=image&response_type=token&client_id=QEpJRy31MOBtlbbsqsEUOV5GWnFjk9y9&redirect_uri=http://localhost:5000/headers")
 
+
 @app.route('/login-results')
+@requires_auth('get:images')
 def logged_in():
-    access_token = request.args.get('access_token', None)
-    print(f"Access token is: {access_token}")
-    return f"access token is {access_token}"
+    return "logged in not implemented"
 
 @app.route('/images')
 @requires_auth('get:images')
