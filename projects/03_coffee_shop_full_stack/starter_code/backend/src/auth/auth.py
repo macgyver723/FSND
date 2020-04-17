@@ -124,7 +124,7 @@ def verify_decode_jwt(token):
                 'description': 'Unable to find the appropriate key.'
             }, 400)
 
-def requires_auth(permission='')
+def requires_auth(permission=''):
     '''
     @param permission string permission (ex: 'post:drink')
 
