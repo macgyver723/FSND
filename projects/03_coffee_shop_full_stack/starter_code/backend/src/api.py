@@ -25,6 +25,17 @@ barista token (stefanbfritz): eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkhiZX
 
 '''
 
+def get_title_and_recipe(request):
+    body = request.get_json()
+    title = body['title'] if 'title' in body else None
+    recipe = json.dumps(body['recipe']) if 'recipe' in body else None
+
+    if recipe and recipe[0] != '[': # only one ingredient in the recipe, json.dumps does not put in list form
+        recipe = '[' + recipe + ']'
+    
+    return title, recipe
+
+
 ## ROUTES
 '''
 @TODO implement endpoint
@@ -84,20 +95,13 @@ def get_drinks_detail():
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def add_drink():
-    body = request.get_json()
-    print(f"body: {body}")
     try:
-        title = body['title']
-        recipe = json.dumps(body['recipe'])
-
-        if recipe[0] != '[': # only one ingredient in the recipe, json.dumps does not put in list form
-            recipe = '[' + recipe + ']'
+        title, recipe = get_title_and_recipe(request)
         
         new_drink = Drink(
             title=title,
             recipe=recipe
-            )
-
+        )
         new_drink.insert()
 
     except:
@@ -105,7 +109,7 @@ def add_drink():
 
     return jsonify({
         'success': True,
-        'drinks': new_drink.long(),
+        'drinks': [new_drink.long()],
     })
 
 
@@ -121,7 +125,29 @@ def add_drink():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:drink_id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def update_drink(drink_id):
+    try:
+        title, recipe = get_title_and_recipe(request)
+        drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+        
+        if drink is None:
+            abort(404)
+        if title:
+            drink.title = title
+        if recipe:
+            drink.recipe = recipe
+        
+        drink.update()
 
+    except:
+        abort(422)
+        
+    return jsonify({
+        'success': True,
+        "drinks" : [drink.long()]
+    })
 
 '''
 @TODO implement endpoint
