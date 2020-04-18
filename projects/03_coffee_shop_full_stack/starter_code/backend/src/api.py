@@ -16,7 +16,7 @@ CORS(app)
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 '''
-db_drop_and_create_all()
+# db_drop_and_create_all()
 
 '''
 !! NOTE use this link to get new token
@@ -36,7 +36,7 @@ barista token (stefanbfritz): eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkhiZX
 '''
 @app.route('/drinks')
 def get_drinks():
-    drinks = Drink.query.all()
+    drinks = Drink.query.order_by(Drink.title).all()
 
     if len(drinks) == 0:
         abort(404)
@@ -56,6 +56,21 @@ def get_drinks():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
+@app.route('/drinks-detail')
+@requires_auth('get:drinks-detail')
+def get_drinks_detail():
+    drinks = Drink.query.order_by(Drink.title).all()
+
+    if len(drinks) == 0:
+        abort(404)
+
+    formatted_drinks = [d.long() for d in drinks]
+
+    return jsonify({
+        'success': True,
+        'drinks' : formatted_drinks,
+    })
 
 '''
 @TODO implement endpoint
