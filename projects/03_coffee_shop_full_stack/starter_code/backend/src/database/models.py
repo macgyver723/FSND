@@ -1,9 +1,9 @@
 import os
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, ARRAY
 from flask_sqlalchemy import SQLAlchemy
 import json
 
-database_filename = "database.db"
+database_filename = "database_test.db"
 project_dir = os.path.dirname(os.path.abspath(__file__))
 database_path = "sqlite:///{}".format(os.path.join(project_dir, database_filename))
 
@@ -47,7 +47,7 @@ class Drink(db.Model):
         short form representation of the Drink model
     '''
     def short(self):
-        print(json.loads(self.recipe))
+        # print(json.loads(self.recipe))
         short_recipe = [{'color': r['color'], 'parts': r['parts']} for r in json.loads(self.recipe)]
         return {
             'id': self.id,
